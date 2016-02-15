@@ -1,0 +1,366 @@
+#!/bin/sh
+# -*- mode: shell-script; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+#
+# Copyright (C) 2014-2016 Li-Pro.Net
+# Edited-by:  Stephan Linz <linz@li-pro.net>
+#
+# Copyright (C) 2012, 2013 O.S. Systems Software LTDA.
+# Authored-by:  Otavio Salvador <otavio@ossystems.com.br>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Add options for the script
+# Copyright (C) 2013 Freescale Semiconductor, Inc.
+
+PROGNAME="$(basename $BASH_SOURCE)"
+if [ "$(basename $0)" = "$PROGNAME" ]; then
+    echo "ERROR: do not execute the scipt, use 'source $PROGNAME --help'. Exiting..."
+    exit
+fi
+
+CWD=`pwd`
+YCD="/var/tmp/cache/`whoami`"
+VEULA='none'
+
+EIF=''
+
+usage()
+{
+    echo -e "\nUsage: source $PROGNAME <build-dir>
+    <build-dir>: specifies the build directory location (required)
+
+If undefined, this script will set \$SSTATE_DIR and \$DL_DIR to default paths
+below '$YCD'. To build with another root path, run this script as:
+CACHE=<path> source $PROGNAME <build-dir>
+
+By default the intermediate build directories will be removed after a
+successful build to save disk space. To disable this, set \$RM_WORK to 0 as:
+RM_WORK=0 source $PROGNAME <build-dir>
+
+If you want to build offline, set \$OFFINE to 1. The default is to build from
+online repositories. If you want to build offline, you need to make sure that
+you have all downloads cached. Do that with
+
+bitbake core-image-minimal -c fetchall
+
+Then start the offline build with:
+
+OFFLINE=1 MACHINE=<machine> source $PROGNAME <build-dir>
+
+You can override all values above in your local site.conf file that will be
+linked in from '$HOME/.yocto/site.conf' or '$HOME/.oe/site.conf'.
+
+If undefined, this script will set \$MACHINE to 'qemux86'.
+
+Supported machines: `echo; \
+ls $CWD/sources/{*/*,*}/conf/machine/*.conf 2>/dev/null | \
+sed s/\.conf//g | sed -r 's/^.+\///' | sort -u | xargs -I% echo -e "\t%"`
+
+To build for a machine listed above, run this script as:
+MACHINE=<machine> source $PROGNAME <build-dir>
+
+If undefined, this script will set \$EXTRA_IMAGE_FEATURES to ''.
+
+Supported extra image features: `echo; for f in $EIF; do echo -e "\t$f"; done`
+
+To build with extra image features listed above, run this script as:
+EXTRA_IMAGE_FEATURES=<features> MACHINE=<machine> source $PROGNAME <build-dir>
+"
+}
+
+clean_up()
+{
+   unset EULA LIST_MACHINES VALID_MACHINE
+   unset CWD TEMPLATES SHORTOPTS LONGOPTS ARGS PROGNAME
+   unset generated_config have_siteconfig updated
+   unset MACHINE SDKMACHINE DISTRO EXTRA_IMAGE_FEATURES OEROOT
+}
+
+# get command line options
+SHORTOPTS="h"
+LONGOPTS="help"
+
+ARGS=$(getopt --options $SHORTOPTS  \
+  --longoptions $LONGOPTS --name $PROGNAME -- "$@" )
+# Print the usage menu if invalid options are specified
+if [ $? != 0 -o $# -lt 1 ]; then
+   usage && clean_up
+   return 1
+fi
+
+eval set -- "$ARGS"
+while true;
+do
+    case $1 in
+        -h|--help)
+           usage
+           clean_up
+           return 0
+           ;;
+        --)
+           shift
+           break
+           ;;
+    esac
+done
+
+if [ "$(whoami)" = "root" ]; then
+    echo "ERROR: do not use the BSP as root. Exiting..."
+fi
+
+if [ -z "$CACHE" ]; then
+    CACHE="$YCD"
+fi
+
+if [ -z "$RM_WORK" ]; then
+    RM_WORK=1
+fi
+
+if [ -z "$OFFLINE" ]; then
+    OFFLINE=0
+fi
+
+if [ -z "$MACHINE" ]; then
+    MACHINE='qemux86'
+fi
+
+# Check the machine type specified
+LIST_MACHINES=`ls -1 $CWD/sources/{*/*,*}/conf/machine 2>/dev/null`
+VALID_MACHINE=`echo -e "$LIST_MACHINES" | grep ${MACHINE}.conf$ | wc -l`
+if [ "x$MACHINE" = "x" ] || [ "$VALID_MACHINE" = "0" ]; then
+    echo -e "\nThe \$MACHINE you have specified ($MACHINE) is not supported by this build setup"
+    usage && clean_up
+    return 1
+else
+    if [ ! -e $1/conf/local.conf.sample ]; then
+        echo "Configuring for ${MACHINE}"
+    fi
+fi
+
+if [ -z "$SDKMACHINE" ]; then
+    SDKMACHINE='i686'
+fi
+
+if [ -z "$EXTRA_IMAGE_FEATURES" ]; then
+    EXTRA_IMAGE_FEATURES=''
+fi
+
+if [ -z "$DISTRO" ]; then
+    DISTRO='poky'
+fi
+
+if [ -z "$BUILD_NUMBER" ]; then
+    BUILD_NUMBER=0
+fi
+
+OEROOT=sources/poky
+if [ -e sources/oe-core ]; then
+    OEROOT=sources/oe-core
+fi
+
+# Ensure all files in sources/base are kept in sync with project root
+updated=
+for f in $CWD/sources/base/*; do
+    file="$(basename $f)"
+    if [ "$file" = "conf" ] || echo $file | grep -q '~$'; then
+        continue
+    fi
+
+    if ! cmp -s "$file" "$f"; then
+        updated="true"
+        [ -e $file ] && chmod u+w $file
+        cp $f $file
+    fi
+done
+if [ "$updated" = "true" ]; then
+    echo "The project root content has been updated. Please run '$PROGNAME' again."
+    return
+fi
+
+cd $OEROOT
+
+. ./oe-init-build-env $CWD/$1 > /dev/null
+
+# If conf/local.conf not generated, no need to go further.
+# There will be no conf/local.conf generated if python version check
+# in poky/scripts/oe-buildenv-internal failed.
+if [ ! -e conf/local.conf ]; then
+    clean_up && return 1
+fi
+
+# Clean up PATH, because if it includes tokens to current directories somehow,
+# wrong binaries can be used instead of the expected ones during task execution
+export PATH="`echo $PATH | sed 's/\(:.\|:\)*:/:/g;s/^.\?://;s/:.\?$//'`"
+
+generated_config=
+if [ ! -e conf/local.conf.sample ]; then
+    mv conf/local.conf conf/local.conf.sample
+
+    # Generate the local.conf based on the Yocto defaults
+    TEMPLATES=$CWD/sources/base/conf 
+    grep -v '^#\|^$' conf/local.conf.sample > conf/local.conf
+    cat >> conf/local.conf <<EOF
+
+SSTATE_DIR ?= "$CACHE/yocto-sstate-cache/\${MACHINE}"
+DL_DIR ?= "$CACHE/yocto-downloads/"
+BUILD_NUMBER = "$BUILD_NUMBER"
+
+SOURCE_MIRROR_URL ?= "file://$CACHE/yocto-sources/"
+INHERIT += "own-mirrors"
+BB_GENERATE_MIRROR_TARBALLS = "1"
+EOF
+    # Change settings according environment
+    sed -e "s,MACHINE ??=.*,MACHINE ??= '$MACHINE',g" \
+        -e "s,SDKMACHINE ??=.*,SDKMACHINE ??= '$SDKMACHINE',g" \
+        -e "s,DISTRO ?=.*,DISTRO ?= '$DISTRO',g" \
+        -e "s,EXTRA_IMAGE_FEATURES =.*,EXTRA_IMAGE_FEATURES = '$EXTRA_IMAGE_FEATURES',g" \
+        -i conf/local.conf
+
+    if [ "x$RM_WORK" = "x1" ]; then
+        cat >> conf/local.conf <<EOF
+INHERIT += "rm_work"
+EOF
+    fi
+
+    if [ "x$OFFLINE" = "x1" ]; then
+        cat >> conf/local.conf <<EOF
+BB_NO_NETWORK = "1"
+EOF
+    fi
+
+    cp $TEMPLATES/* conf/
+
+    for s in $SITECONF_HOME $HOME/.yocto $HOME/.oe; do
+        if [ -e $s/site.conf ]; then
+            echo "Linking $s/site.conf to conf/site.conf"
+            ln -s $s/site.conf conf
+        fi
+    done
+
+    generated_config=1
+fi
+
+have_siteconfig=
+if [ -e conf/site.conf ]; then
+    have_siteconfig=1
+fi
+
+# Handle EULA setting
+if [ -e $VEULA ]; then
+    EULA_ACCEPTED=
+else
+    # Vendor EULA not present, skip EULA acceptance process.
+    EULA_ACCEPTED=1
+fi
+
+# EULA has been accepted already (ACCEPT_FSL_EULA is set in local.conf)
+if grep -q '^\s*ACCEPT_FSL_EULA\s*=\s*["'\'']..*["'\'']' conf/local.conf; then
+    EULA_ACCEPTED=1
+fi
+
+if [ -z "$EULA_ACCEPTED" ] && [ -n "$EULA" ]; then
+    # The FSL EULA is not set as accepted in local.conf, but the EULA
+    # variable is set in the environment, so we just configure
+    # ACCEPT_FSL_EULA in local.conf according to $EULA.
+    echo "ACCEPT_FSL_EULA = \"$EULA\"" >> conf/local.conf
+elif [ -n "$EULA_ACCEPTED" ]; then
+    # The FSL EULA has been accepted once, so ACCEPT_FSL_EULA is set
+    # in local.conf.  No need to do anything.
+    :
+else
+    # THE FSL EULA is not set as accepted in local.conf, and EULA is
+    # not set in the environment, so we need to ask user if he/she
+    # accepts the FSL EULA:
+    cat <<EOF
+
+Some BSPs depend on libraries and packages which are covered by Freescale's
+End User License Agreement (EULA). To have the right to use these binaries in
+your images, you need to read and accept the following...
+
+EOF
+
+    sleep 4
+
+    more -d $VEULA
+    echo
+    REPLY=
+    while [ -z "$REPLY" ]; do
+        echo -n "Do you accept the EULA you just read? (y/n) "
+        read REPLY
+        case "$REPLY" in
+            y|Y)
+            echo "EULA has been accepted."
+            echo "ACCEPT_FSL_EULA = \"1\"" >> conf/local.conf
+            ;;
+            n|N)
+            echo "EULA has not been accepted."
+            ;;
+            *)
+            REPLY=
+            ;;
+        esac
+    done
+fi
+
+cat <<EOF
+
+Welcome to LPN Central BSP
+
+The Yocto Project has extensive documentation about OE including a
+reference manual which can be found at:
+    http://yoctoproject.org/documentation
+
+For more information about OpenEmbedded see their website:
+    http://www.openembedded.org/
+
+You can now run 'bitbake <target>'
+
+Common targets are:
+    core-image-minimal
+    meta-toolchain
+    meta-toolchain-sdk
+    adt-installer
+    meta-ide-support
+
+EOF
+
+if [ -n "$generated_config" ]; then
+    cat <<EOF
+Your build environment has been configured with:
+
+    SSTATE_DIR=$CACHE/yocto-sstate-cache/\${MACHINE}
+    DL_DIR=$CACHE/yocto-downloads/
+    SOURCE_MIRROR_URL="file://$CACHE/yocto-sources/"
+
+    MACHINE=$MACHINE
+    SDKMACHINE=$SDKMACHINE
+    DISTRO=$DISTRO
+    EULA=$EULA
+
+    EXTRA_IMAGE_FEATURES=$EXTRA_IMAGE_FEATURES
+
+EOF
+else
+    echo "Your configuration files at $1 have not been touched."
+    echo
+fi
+
+if [ -n "$have_siteconfig" ]; then
+    echo "Your site configuration files at $1 contains:"
+    echo
+    grep -v '^#\|^$' conf/site.conf | sed -e 's/^/    /'
+    echo
+fi
+
+clean_up
