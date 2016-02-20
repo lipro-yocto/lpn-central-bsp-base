@@ -56,6 +56,12 @@ The following layers are included on this release:
        |GIT         |git://git.yoctoproject.org/poky
        |Project     |https://www.yoctoproject.org/tools-resources/projects/poky
        |Mailing list|https://lists.yoctoproject.org/listinfo/yocto
+1.5+^.^|meta-mingw 2+|collection of extra packages and features for MinGW based SDKs
+       |Path        |`sources/meta-mingw`
+       |GIT         |git://git.yoctoproject.org/meta-mingw
+       |Project     |https://git.yoctoproject.org/cgit/cgit.cgi/meta-mingw
+       |Mailing list|https://lists.yoctoproject.org/listinfo/yocto +
+                     NOTE: Use [meta-mingw] in subject to easy the processing
 1.5+^.^|meta-openembedded 2+|collection of OpenEmbedded extra packages and features
        |Path        |`sources/meta-openembedded`
        |GIT         |git://github.com/openembedded/meta-openembedded.git +
