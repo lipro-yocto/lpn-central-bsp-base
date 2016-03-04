@@ -68,28 +68,59 @@ The following layers are included on this release:
        |Project     |https://git.yoctoproject.org/cgit/cgit.cgi/meta-mingw
        |Mailing list|https://lists.yoctoproject.org/listinfo/yocto +
                      NOTE: Use [meta-mingw] in subject to easy the processing
+1.6+^.^|meta-angstrom 2+|support for Ångström distribution changed
+                         by Andreas Müller
+       |Path        |`sources/meta-angstrom`
+       |GIT         |git://github.com/schnitzeltony/meta-angstrom.git
+       |Project     |https://github.com/schnitzeltony/meta-angstrom
+       |Origin      |https://github.com/Angstrom-distribution/meta-angstrom
+       |Home page   |http://www.angstrom-distribution.org/
 1.5+^.^|meta-openembedded 2+|collection of OpenEmbedded extra packages and features
+                             changed by Andreas Müller
        |Path        |`sources/meta-openembedded`
-       |GIT         |git://github.com/openembedded/meta-openembedded.git +
-                     git://git.openembedded.org/meta-openembedded
-       |Project     |https://github.com/openembedded/meta-openembedded +
+       |GIT         |git://github.com/schnitzeltony/meta-openembedded.git
+       |Project     |https://github.com/schnitzeltony/meta-openembedded
+       |Origin      |https://github.com/openembedded/meta-openembedded
                      http://git.openembedded.org/meta-openembedded
-       |Mailing list|http://lists.openembedded.org/mailman/listinfo/openembedded-devel +
-                     NOTE: Use [meta-oe] in subject to easy the processing
-1.5+^.^|meta-qt5 2+|support for Qt5 extra packages and features
+1.5+^.^|meta-qt5 2+|support for Qt5 extra packages and features changed
+                    by Andreas Müller
        |Path        |`sources/meta-qt5`
-       |GIT         |git://github.com/meta-qt5/meta-qt5.git
-       |Project     |https://github.com/meta-qt5/meta-qt5
-       |Mailing list|http://lists.openembedded.org/mailman/listinfo/openembedded-devel +
-                     NOTE: Use [meta-qt5] in subject to easy the processing
+       |GIT         |git://github.com/schnitzeltony/meta-qt5.git
+       |Project     |https://github.com/schnitzeltony/meta-qt5
+       |Origin      |https://github.com/meta-qt5/meta-qt5
+1.4+^.^|meta-qt5-extra 2+|support for Qt5 extra packages and features changed
+                          by Andreas Müller
+       |Path        |`sources/meta-qt5-extra`
+       |GIT         |git://github.com/schnitzeltony/meta-qt5-extra.git
+       |Project     |https://github.com/schnitzeltony/meta-qt5-extra
+1.4+^.^|meta-misc 2+|layer playgound with images and staging by Andreas Müller
+       |Path        |`sources/meta-misc`
+       |GIT         |git://github.com/schnitzeltony/meta-misc.git
+       |Project     |https://github.com/schnitzeltony/meta-misc
+1.4+^.^|meta-office 2+|support for office packages and features
+                       by Andreas Müller
+       |Path        |`sources/meta-office`
+       |GIT         |git://github.com/schnitzeltony/meta-office.git
+       |Project     |https://github.com/schnitzeltony/meta-office
+1.5+^.^|meta-games 2+|support for games packages and features
+                      by Andreas Müller
+       |Path        |`sources/meta-games`
+       |GIT         |git://github.com/schnitzeltony/meta-games.git
+       |Project     |https://github.com/schnitzeltony/meta-games
+       |Origin      |https://github.com/cazfi/meta-games
+1.5+^.^|meta-browser 2+|support for web browser packages and features
+                        by Andreas Müller
+       |Path        |`sources/meta-browser`
+       |GIT         |git://github.com/schnitzeltony/meta-browser.git
+       |Project     |https://github.com/schnitzeltony/meta-browser
+       |Origin      |https://github.com/OSSystems/meta-browser
 1.5+^.^|meta-fsl-arm 2+|support for Freescale's ARM processors and board
+                        changed by Andreas Müller
        |Path        |`sources/meta-fsl-arm`
-       |GIT         |git://git.yoctoproject.org/meta-fsl-arm +
-                     git://github.com/Freescale/meta-fsl-arm.git
-       |Project     |http://git.yoctoproject.org/cgit/cgit.cgi/meta-fsl-arm +
+       |GIT         |git://github.com/schnitzeltony/meta-fsl-arm.git
+       |Project     |https://github.com/schnitzeltony/meta-fsl-arm
+       |Origin      |http://git.yoctoproject.org/cgit/cgit.cgi/meta-fsl-arm +
                      https://github.com/Freescale/meta-fsl-arm
-       |Mailing list|https://lists.yoctoproject.org/listinfo/meta-freescale +
-                     Note: Use [meta-fsl-arm] in subject to easy the processing
 1.5+^.^|meta-fsl-arm-extra 2+|support for boards using Freescale's processors
        |Path        |`sources/meta-fsl-arm-extra`
        |GIT         |git://github.com/Freescale/meta-fsl-arm-extra.git
@@ -102,10 +133,4 @@ The following layers are included on this release:
        |Project     |https://github.com/Freescale/meta-fsl-demos
        |Mailing list|https://lists.yoctoproject.org/listinfo/meta-freescale +
                      Note: Use [meta-fsl-demos] in subject to easy the processing
-1.5+^.^|meta-fsl-ppc 2+|support for Freescale's PowerPC processors and board
-       |Path        |`sources/meta-fsl-ppc`
-       |GIT         |git://git.yoctoproject.org/meta-fsl-ppc
-       |Project     |http://git.yoctoproject.org/cgit/cgit.cgi/meta-fsl-ppc
-       |Mailing list|https://lists.yoctoproject.org/listinfo/meta-freescale +
-                     Note: Use [meta-fsl-ppc] in subject to easy the processing
 |===
