@@ -177,10 +177,6 @@ for f in $CWD/sources/base/*; do
         continue
     fi
 
-    if [ "$file" = "fixes" ] || echo $file | grep -q '~$'; then
-        continue
-    fi
-
     if ! cmp -s "$file" "$f"; then
         updated="true"
         [ -e $file ] && chmod u+w $file
