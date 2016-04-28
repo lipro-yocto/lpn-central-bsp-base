@@ -104,4 +104,8 @@ The following layers are included on this release:
        |Project     |https://github.com/Freescale/meta-fsl-demos
        |Mailing list|https://lists.yoctoproject.org/listinfo/meta-freescale +
                      Note: Use [meta-fsl-demos] in subject to easy the processing
+1.4+^.^|meta-cl-arm-extra 2+|support for boards using CompuLab's modules
+       |Path        |`sources/meta-cl-arm-extra`
+       |GIT         |git://github.com/lipro-compulab/meta-cl-arm-extra.git
+       |Project     |https://github.com/lipro-compulab/meta-cl-arm-extra
 |===
